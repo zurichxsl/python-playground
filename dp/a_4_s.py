@@ -15,14 +15,12 @@ class Solver:
         moves = 0
         while not board.isGoal():
             neighbors = board.neighbors()
-            moves += 1
             for n in neighbors:
                 pq.add(n)
             board = pq.min()
             print board
+            moves += 1
         self.num_moves = moves
-
-
 
 
 
@@ -37,6 +35,14 @@ class Board:
         self.blocks = []
         for i in range(self.d):
             self.blocks.append(map(lambda x: x!='' and x or 0, blocks[i]))
+
+    def __str__(self):
+        d = self.d
+        fill = len(str(d*d)) - 1
+        for i in range(d):
+            for c in self.blocks[i]:
+                print '% *d' % (fill, c),
+            print
 
     def dimension(self):
         return len(self.blocks)
@@ -81,15 +87,6 @@ class Board:
                 if not y[i][j] == self.blocks[i][j]:
                     return False
         return True
-
-    def toString(self):
-        d = self.d
-        fill = len(str(d*d)) - 1
-        for i in range(d):
-            for c in self.blocks[i]:
-                print '% *d' % (fill, c),
-            print
-
 
     def neighbors(self):
         n = []
