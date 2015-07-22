@@ -191,7 +191,7 @@ class Solver:
             neighbors = board.neighbors()
             for n in neighbors:
                 if str(n) not in visited:
-                    pq.put((n.score-n.moves, n))
+                    pq.put((n.score, n))
                     visited.add(str(n))
             score, board = pq.get()
         return board
@@ -237,12 +237,15 @@ def test():
         print
 
 if __name__ == '__main__':
-    import os
-    for i in os.listdir(dir):
-        if i.find('unsolvable') > 0:
-            continue
-        else:
-            main(dir, i)
+    # import os
+    # for i in os.listdir(dir):
+    #     if i.find('unsolvable') > 0:
+    #         continue
+    #     else:
+    #         main(dir, i)
+
+    #p = MinPQ([89, 79, 46, 69, 59, 25, 44, 60, 30, 20 ])
+
     #main(dir, 'puzzle32.txt')
     # test_solver([
     #     [3,1,6,4],[5,0,9,7], [10,2,11,8], [13,15,14,12]
