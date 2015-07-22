@@ -1,3 +1,5 @@
+dir = '/Users/sxu/Downloads/8puzzle/'
+
 class Board:
     def __init__(self, blocks):
         self.blocks = []
@@ -120,7 +122,6 @@ class MinPQ:
             pq_score.append((i, self.array[i].score))
         print pq_score
 
-
     def insert(self, v, fn):
         """insert v into min priority queue"""
         if not self.size():
@@ -168,7 +169,6 @@ class MinPQ:
         return k
 
 
-
 class Solver:
     def __init__(self, initial):
         self.visited_nodes = 0
@@ -194,8 +194,8 @@ class Solver:
                     visited[str(n)] = 1
             board = pq.delMin(fn)
             self.visited_nodes += 1
+            pq.show()
             yield board
-
 
 
 def test_solver(blocks):
@@ -206,9 +206,10 @@ def test_solver(blocks):
     # print '=====================manhattan====%s===================' % solver.moves()
 
     solver = Solver(initial)
-    b = None
-    for b in solver.solution('hamming'):
-        b
+    iterator = (solver.solution('hamming'))
+    while True:
+        b = iterator.next()
+
     if b:
         print '=====================hamming====%s===================' % b.moves
 
@@ -226,17 +227,6 @@ def main(dir, fname):
     test_solver(blocks)
     print
 
-dir = '/Users/sxu/Downloads/8puzzle/'
-
-if __name__ == '__main__':
-    import os
-    for i in os.listdir(dir):
-        if i.find('unsolvable') > 0:
-            continue
-        else:
-            main(dir, i)
-
-
 
 def test():
     initial = Board([
@@ -249,64 +239,14 @@ def test():
         b.show()
         print
 
+if __name__ == '__main__':
+    # import os
+    # for i in os.listdir(dir):
+    #     if i.find('unsolvable') > 0:
+    #         continue
+    #     else:
+    #         main(dir, i)
+    main(dir, 'puzzle32.txt')
 
 
-class VMinPQ:
-    """minimum priority queue, parent's key no bigger than children's keys"""
-    def __init__(self, initial):
-        """array representation, indice starts at 1, take nodes in level order"""
-        self.array = initial or []
-        self.length = 0
-
-    def show(self):
-        pq_score = []
-        for i in xrange(1, self.size()):
-            pq_score.append((i, self.array[i]))
-        print pq_score
-
-    def insert(self, v):
-        """insert v into min priority queue"""
-        if not self.size():
-            self.array.append('')
-        self.array.append(v)
-        k = self.size() - 1
-        inserted_index = self.swim(k)
-        return inserted_index
-
-    def size(self):
-        return len(self.array)
-
-    def delMin(self):
-        min = self.array[1]
-        last = self.array[self.size()-1]
-        self.array[1] = last
-        self.array = self.array[:-1]
-        self.sink(1)
-        if self.size() == 1:
-            self.array.pop()
-        return min
-
-    def sink(self, k):
-        """when a parent's key becomes bigger than its children's key, sink down"""
-        while 2*k < self.size():
-            j = 2*k
-            if j+1 < self.size() and (self.array[j+1] < self.array[j]):
-                # choose the smaller one
-                j += 1
-            if self.array[k] < self.array[j]:
-                break
-            temp = self.array[j]
-            self.array[j] = self.array[k]
-            self.array[k] = temp
-            k = j
-        return k
-
-    def swim(self, k):
-        """when child's key becomes smaller than its parent's key, swim up"""
-        while k > 1 and (self.array[k] < self.array[k/2]):
-            temp = self.array[k]
-            self.array[k] = self.array[k/2]
-            self.array[k/2] = temp
-            k /= 2
-        return k
 
