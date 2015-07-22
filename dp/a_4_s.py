@@ -194,7 +194,6 @@ class Solver:
                     visited[str(n)] = 1
             board = pq.delMin(fn)
             self.visited_nodes += 1
-            pq.show()
             yield board
 
 
@@ -205,14 +204,12 @@ def test_solver(blocks):
     #     b
     # print '=====================manhattan====%s===================' % solver.moves()
 
+    b = None
     solver = Solver(initial)
-    iterator = (solver.solution('hamming'))
-    while True:
-        b = iterator.next()
-
+    for b in solver.solution('hamming'):
+        b
     if b:
         print '=====================hamming====%s===================' % b.moves
-
 
 def main(dir, fname):
     lines = [line.rstrip('\n').strip() for line in open(dir+fname) if line.rstrip('\n')]
@@ -240,13 +237,13 @@ def test():
         print
 
 if __name__ == '__main__':
-    # import os
-    # for i in os.listdir(dir):
-    #     if i.find('unsolvable') > 0:
-    #         continue
-    #     else:
-    #         main(dir, i)
-    main(dir, 'puzzle32.txt')
+    import os
+    for i in os.listdir(dir):
+        if i.find('unsolvable') > 0:
+            continue
+        else:
+            main(dir, i)
+    #main(dir, 'puzzle32.txt')
 
 
 
