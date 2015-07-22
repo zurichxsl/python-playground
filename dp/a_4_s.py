@@ -1,4 +1,5 @@
 dir = '/Users/sxu/Downloads/8puzzle/'
+import Queue
 
 class Board:
     def __init__(self, blocks):
@@ -18,12 +19,12 @@ class Board:
 
     def show(self):
         d = self.d
-        fill = len(str(d*d)) - 1
+        total = len(str(d*d)) + 1
         for i in range(d):
             for c in self.blocks[i]:
-                print '% *d' % (fill, c),
+                print '% *d' % (total, c),
             print
-        print 'moves %d, score %d' % (self.moves, self.hamming()-self.moves)
+        print 'moves %d, score %d' % (self.moves, self.hamming())
         print
 
     def dimension(self):
@@ -35,9 +36,12 @@ class Board:
         score = 0
         for i in range(d):
             for j in range(d):
-                if not (i == d-1 and j == d-1) and not (self.blocks[i][j] == i*d + j + 1):
+                if i == d-1 and j == d-1:
+                    if self.blocks[i][j] != 0:
+                        score +=1
+                elif not (self.blocks[i][j] == i*d + j + 1):
                     score += 1
-        return score + self.moves
+        return score
 
     def manhattan(self):
         """sum of Manhattan distances between blocks and goal"""
@@ -50,7 +54,7 @@ class Board:
                     goal_i = v / d
                     goal_j = d - v % d
                     score += abs(goal_i - i) + abs(goal_j - j)
-        return score + self.moves
+        return score
 
     def isGoal(self):
         d = self.d
@@ -82,28 +86,28 @@ class Board:
                         board.blocks[i][j] = cb[i-1][j]
                         board.blocks[i-1][j] = 0
                         board.moves = self.moves + 1
-                        board.score = board.hamming()
+                        board.score = board.hamming() + board.moves
                         n.append(board)
                     if i+1 < self.d:
                         board = Board(cb)
                         board.blocks[i][j] = cb[i+1][j]
                         board.blocks[i+1][j] = 0
                         board.moves = self.moves + 1
-                        board.score = board.hamming()
+                        board.score = board.hamming() + board.moves
                         n.append(board)
                     if j-1 >= 0:
                         board = Board(cb)
                         board.blocks[i][j] = cb[i][j-1]
                         board.blocks[i][j-1] = 0
                         board.moves = self.moves + 1
-                        board.score = board.hamming()
+                        board.score = board.hamming() + board.moves
                         n.append(board)
                     if j+1 < self.d:
                         board = Board(cb)
                         board.blocks[i][j] = cb[i][j+1]
                         board.blocks[i][j+1] = 0
                         board.moves = self.moves + 1
-                        board.score = board.hamming()
+                        board.score = board.hamming() + board.moves
                         n.append(board)
                     return n
         return n
@@ -122,36 +126,36 @@ class MinPQ:
             pq_score.append((i, self.array[i].score))
         print pq_score
 
-    def insert(self, v, fn):
+    def insert(self, v):
         """insert v into min priority queue"""
         if not self.size():
             self.array.append('')
         self.array.append(v)
         k = self.size() - 1
-        inserted_index = self.swim(k, fn)
+        inserted_index = self.swim(k)
         return inserted_index
 
     def size(self):
         return len(self.array)
 
-    def delMin(self, fn):
+    def delMin(self):
         min = self.array[1]
         last = self.array[self.size()-1]
         self.array[1] = last
         self.array = self.array[:-1]
-        self.sink(1, fn)
+        self.sink(1)
         if self.size() == 1:
             self.array.pop()
         return min
 
-    def sink(self, k, fn):
+    def sink(self, k):
         """when a parent's key becomes bigger than its children's key, sink down"""
         while 2*k < self.size():
             j = 2*k
-            if j+1 < self.size() and (getattr(self.array[j+1], fn)() < getattr(self.array[j], fn)()):
+            if j+1 < self.size() and self.array[j+1].score < self.array[j].score:
                 # choose the smaller one
                 j += 1
-            if getattr(self.array[k], fn)() < getattr(self.array[j], fn)():
+            if self.array[k].score < self.array[j].score:
                 break
             temp = self.array[j]
             self.array[j] = self.array[k]
@@ -159,9 +163,9 @@ class MinPQ:
             k = j
         return k
 
-    def swim(self, k, fn):
+    def swim(self, k):
         """when child's key becomes smaller than its parent's key, swim up"""
-        while k > 1 and (getattr(self.array[k], fn)() < getattr(self.array[k/2], fn)()):
+        while k > 1 and self.array[k].score < self.array[k/2].score:
             temp = self.array[k]
             self.array[k] = self.array[k/2]
             self.array[k/2] = temp
@@ -177,24 +181,20 @@ class Solver:
         else:
             raise Exception('Board class is required')
 
-    def moves(self):
-        return self.visited_nodes
-
-    def solution(self, fn):
+    def solution(self):
         board = self.initial
-        pq = MinPQ([])
-        visited = {}
-        visited[str(board)] = 1
+        pq = Queue.PriorityQueue()
+        visited = set()
+        visited.add(str(board))
 
         while not board.isGoal():
             neighbors = board.neighbors()
             for n in neighbors:
                 if str(n) not in visited:
-                    pq.insert(n, fn)
-                    visited[str(n)] = 1
-            board = pq.delMin(fn)
-            self.visited_nodes += 1
-            yield board
+                    pq.put((n.score-n.moves, n))
+                    visited.add(str(n))
+            score, board = pq.get()
+        return board
 
 
 def test_solver(blocks):
@@ -203,13 +203,13 @@ def test_solver(blocks):
     # for b in solver.solution('manhattan'):
     #     b
     # print '=====================manhattan====%s===================' % solver.moves()
-
-    b = None
-    solver = Solver(initial)
-    for b in solver.solution('hamming'):
-        b
+    import time
+    start = time.time()
+    b = Solver(initial).solution()
     if b:
-        print '=====================hamming====%s===================' % b.moves
+        print '=====================hamming====%s==========in %s=========' % (b.moves, time.time() - start)
+        #b.show()
+
 
 def main(dir, fname):
     lines = [line.rstrip('\n').strip() for line in open(dir+fname) if line.rstrip('\n')]
@@ -244,6 +244,9 @@ if __name__ == '__main__':
         else:
             main(dir, i)
     #main(dir, 'puzzle32.txt')
+    # test_solver([
+    #     [3,1,6,4],[5,0,9,7], [10,2,11,8], [13,15,14,12]
+    # ])
 
 
 
